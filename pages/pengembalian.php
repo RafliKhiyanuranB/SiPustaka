@@ -41,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kemba
 }
 
 // Daftar peminjaman aktif (belum dikembalikan) dari VIEW
-$aktif_list = $db->query("
+$aktif_list = $db->query('
     SELECT * FROM v_peminjaman_lengkap
-    WHERE status IN ('dipinjam','terlambat')
+    WHERE ' . sql_peminjaman_aktif() . '
     ORDER BY tanggal_kembali ASC
-");
+');
 
 include '../includes/header.php';
 ?>

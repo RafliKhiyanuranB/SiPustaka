@@ -48,7 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'pinja
 $status_filter = trim($_GET['status'] ?? '');
 $search        = trim($_GET['q'] ?? '');
 $where_parts   = [];
-if ($status_filter) $where_parts[] = "status = '".addslashes($status_filter)."'";
+$status_valid = ['dipinjam', 'terlambat', 'dikembalikan'];
+if ($status_filter && in_array($status_filter, $status_valid, true)) {
+    $where_parts[] = "status = '" . $status_filter . "'";
+}
 if ($search)        $where_parts[] = "(nama_anggota LIKE '%".addslashes($search)."%' OR judul_buku LIKE '%".addslashes($search)."%' OR kode_pinjam LIKE '%".addslashes($search)."%')";
 $where = $where_parts ? "WHERE ".implode(' AND ', $where_parts) : '';
 

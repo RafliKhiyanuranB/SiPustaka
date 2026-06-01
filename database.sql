@@ -10,6 +10,9 @@ CREATE DATABASE IF NOT EXISTS db_perpustakaan
 
 USE db_perpustakaan;
 
+-- Sesuaikan collation sesi saat import (MySQL 8 / Laragon)
+SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
 -- ============================================================
 -- TABLES
 -- ============================================================
@@ -19,7 +22,7 @@ CREATE TABLE IF NOT EXISTS kategori (
     nama_kategori VARCHAR(100) NOT NULL,
     deskripsi     TEXT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS buku (
     id_buku       INT AUTO_INCREMENT PRIMARY KEY,
@@ -35,7 +38,7 @@ CREATE TABLE IF NOT EXISTS buku (
     deskripsi     TEXT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_kategori) REFERENCES kategori(id_kategori) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS anggota (
     id_anggota    INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,7 +50,7 @@ CREATE TABLE IF NOT EXISTS anggota (
     tanggal_daftar DATE DEFAULT (CURRENT_DATE),
     status        ENUM('aktif','nonaktif') DEFAULT 'aktif',
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS peminjaman (
     id_pinjam       INT AUTO_INCREMENT PRIMARY KEY,
@@ -62,7 +65,7 @@ CREATE TABLE IF NOT EXISTS peminjaman (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_anggota) REFERENCES anggota(id_anggota),
     FOREIGN KEY (id_buku)    REFERENCES buku(id_buku)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS denda (
     id_denda        INT AUTO_INCREMENT PRIMARY KEY,
@@ -74,7 +77,7 @@ CREATE TABLE IF NOT EXISTS denda (
     tanggal_bayar   DATE,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_pinjam) REFERENCES peminjaman(id_pinjam)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ============================================================
 -- VIEWS
@@ -94,7 +97,7 @@ SELECT
     p.tanggal_pinjam,
     p.tanggal_kembali,
     p.tanggal_kembali_aktual,
-    p.status,
+    CAST(p.status AS CHAR(20) CHARACTER SET utf8mb4) COLLATE utf8mb4_0900_ai_ci AS status,
     p.petugas,
     DATEDIFF(IFNULL(p.tanggal_kembali_aktual, CURRENT_DATE), p.tanggal_kembali) AS keterlambatan_hari
 FROM peminjaman p
@@ -408,3 +411,18 @@ INSERT INTO anggota (kode_anggota, nama, email, telepon, alamat) VALUES
 ('AGT-2024-0003','Ahmad Fauzi',     'ahmad@email.com',  '081234567892', 'Jl. Diponegoro No.10, Surabaya'),
 ('AGT-2024-0004','Dewi Lestari',    'dewi@email.com',   '081234567893', 'Jl. Sudirman No.3, Malang'),
 ('AGT-2024-0005','Rizky Pratama',   'rizky@email.com',  '081234567894', 'Jl. Gatot Subroto No.7, Surabaya');
+
+-- ============================================================
+-- UPGRADE (database sudah ada — jalankan blok ini saja di HeidiSQL)
+-- ============================================================
+-- USE db_perpustakaan;
+-- SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+--
+-- ALTER DATABASE db_perpustakaan CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- ALTER TABLE kategori    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- ALTER TABLE buku        CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- ALTER TABLE anggota     CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- ALTER TABLE peminjaman  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- ALTER TABLE denda       CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+--
+-- Lalu jalankan ulang bagian CREATE OR REPLACE VIEW di atas (Views).

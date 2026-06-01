@@ -20,7 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bayar
 $filter = trim($_GET['status'] ?? '');
 $search = trim($_GET['q'] ?? '');
 $where_parts = [];
-if ($filter) $where_parts[] = "d.status_bayar='".addslashes($filter)."'";
+if (in_array($filter, ['belum', 'sudah'], true)) {
+    $where_parts[] = "d.status_bayar = '" . $filter . "'";
+}
 if ($search)  $where_parts[] = "(a.nama LIKE '%".addslashes($search)."%' OR a.kode_anggota LIKE '%".addslashes($search)."%')";
 $where = $where_parts ? "WHERE ".implode(' AND ', $where_parts) : '';
 

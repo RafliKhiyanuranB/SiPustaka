@@ -38,8 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $db->prepare("UPDATE anggota SET nama=?,email=?,telepon=?,alamat=?,status=? WHERE id_anggota=?");
         $stmt->bind_param('sssssi', $nama, $email, $telepon, $alamat, $status, $id);
-        $msg = $stmt->execute() ? "Data anggota berhasil diperbarui." : "Gagal memperbarui data.";
-        if (!$stmt->execute()) $msg_type = 'danger';
+        if ($stmt->execute()) {
+            $msg = 'Data anggota berhasil diperbarui.';
+        } else {
+            $msg = 'Gagal memperbarui data.';
+            $msg_type = 'danger';
+        }
     }
 
     // NONAKTIF / AKTIF
@@ -53,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // HAPUS
     if ($action === 'hapus') {
         $id = intval($_POST['id_anggota'] ?? 0);
-        $cek = $db->query("SELECT COUNT(*) AS c FROM peminjaman WHERE id_anggota=$id AND status IN ('dipinjam','terlambat')")->fetch_assoc();
+        $cek = $db->query("SELECT COUNT(*) AS c FROM peminjaman WHERE id_anggota=$id AND " . sql_peminjaman_aktif())->fetch_assoc();
         if ($cek['c'] > 0) {
             $msg = "Tidak dapat menghapus: anggota masih memiliki buku yang dipinjam.";
             $msg_type = 'danger';
@@ -69,7 +73,9 @@ $search = trim($_GET['q'] ?? '');
 $filter = trim($_GET['status'] ?? '');
 $where_parts = [];
 if ($search) $where_parts[] = "(nama LIKE '%".addslashes($search)."%' OR kode_anggota LIKE '%".addslashes($search)."%' OR email LIKE '%".addslashes($search)."%')";
-if ($filter) $where_parts[] = "status = '".addslashes($filter)."'";
+if (in_array($filter, ['aktif', 'nonaktif'], true)) {
+    $where_parts[] = "status = '" . $filter . "'";
+}
 $where = $where_parts ? "WHERE ".implode(' AND ', $where_parts) : '';
 
 $anggota_list = $db->query("SELECT * FROM anggota $where ORDER BY id_anggota DESC");

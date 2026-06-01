@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'hapus') {
         $id = intval($_POST['id_buku'] ?? 0);
         // Cek apakah sedang dipinjam
-        $cek = $db->query("SELECT COUNT(*) AS c FROM peminjaman WHERE id_buku=$id AND status IN ('dipinjam','terlambat')");
+        $cek = $db->query("SELECT COUNT(*) AS c FROM peminjaman WHERE id_buku=$id AND " . sql_peminjaman_aktif());
         $row = $cek->fetch_assoc();
         if ($row['c'] > 0) {
             $msg = "Tidak dapat menghapus: buku sedang dipinjam."; $msg_type = 'danger';
@@ -154,8 +154,8 @@ include '../includes/header.php';
                     </td>
                     <td>
                         <?php
-                        $sc = ['Tersedia'=>'badge-success','Terbatas'=>'badge-warning','Habis'=>'badge-danger'];
-                        echo '<span class="badge '.($sc[$b['status_stok']]??'badge-muted').'">'.htmlspecialchars($b['status_stok']).'</span>';
+                        $stok = (int) $b['stok_tersedia'];
+                        echo '<span class="badge ' . stok_badge_class($stok) . '">' . htmlspecialchars(stok_label($stok)) . '</span>';
                         ?>
                     </td>
                     <td>

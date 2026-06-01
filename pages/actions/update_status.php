@@ -7,16 +7,28 @@ $db = getDB();
 
 // Panggil Stored Procedure yang menggunakan CURSOR
 // sp_update_status_terlambat() akan iterasi semua peminjaman aktif yang terlambat
-$db->query("CALL sp_update_status_terlambat()");
-$result = $db->store_result();
-$row    = $result ? $result->fetch_assoc() : null;
+$result = $db->query('CALL sp_update_status_terlambat()');
 
-if ($row) {
-    $_SESSION['msg']      = "✅ Cursor selesai dijalankan. " . htmlspecialchars($row['pesan']);
-    $_SESSION['msg_type'] = 'success';
+if ($result === false) {
+    $_SESSION['msg']      = 'Gagal memperbarui status: ' . $db->error;
+    $_SESSION['msg_type'] = 'danger';
 } else {
-    $_SESSION['msg']      = "Stored Procedure cursor dijalankan (tidak ada data baru).";
-    $_SESSION['msg_type'] = 'info';
+    $row = $result->fetch_assoc();
+    $result->free();
+    while ($db->more_results()) {
+        $db->next_result();
+        if ($extra = $db->store_result()) {
+            $extra->free();
+        }
+    }
+
+    if ($row && !empty($row['pesan'])) {
+        $_SESSION['msg']      = '✅ ' . htmlspecialchars($row['pesan']);
+        $_SESSION['msg_type'] = 'success';
+    } else {
+        $_SESSION['msg']      = 'Tidak ada peminjaman yang perlu diperbarui.';
+        $_SESSION['msg_type'] = 'info';
+    }
 }
 
 // Redirect kembali ke halaman sebelumnya

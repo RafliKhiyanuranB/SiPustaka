@@ -11,22 +11,20 @@ $bulan = intval($_GET['bulan'] ?? date('n'));
 $tahun = intval($_GET['tahun'] ?? date('Y'));
 $nama_bulan = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-// Panggil Stored Procedure sp_laporan_bulanan — mengembalikan 3 result set
-$db->query("CALL sp_laporan_bulanan($bulan, $tahun)");
-
-// Result set 1: Statistik peminjaman
-$stat_pinjam = $db->store_result()->fetch_assoc();
-$db->next_result();
-
-// Result set 2: Buku terpopuler
-$buku_populer = $db->store_result();
-$db->next_result();
-
-// Result set 3: Statistik denda
-$stat_denda = $db->store_result()->fetch_assoc();
+$laporan      = fetch_laporan_bulanan($db, $bulan, $tahun);
+$stat_pinjam  = $laporan['stat_pinjam'];
+$buku_populer = $laporan['buku_populer'];
+$stat_denda   = $laporan['stat_denda'];
+$laporan_err  = $laporan['error'];
 
 include '../includes/header.php';
 ?>
+
+<?php if (!empty($laporan_err)): ?>
+<div class="alert alert-warning" style="margin-bottom:20px">
+    Laporan memakai query alternatif (stored procedure tidak dapat dijalankan).
+</div>
+<?php endif; ?>
 
 <div class="flex justify-between items-center mb-6">
     <div>

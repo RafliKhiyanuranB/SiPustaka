@@ -1,5 +1,6 @@
 <?php
 // index.php
+session_start();
 require_once 'config/database.php';
 
 $page_title = 'Dashboard';
@@ -18,12 +19,12 @@ $recent = $db->query("
 ");
 
 // Buku stok terbatas dari VIEW v_stok_buku
-$stok_terbatas = $db->query("
+$stok_terbatas = $db->query('
     SELECT * FROM v_stok_buku
-    WHERE stok_tersedia = 0 OR (stok_tersedia > 0 AND stok_tersedia <= 2)
+    WHERE ' . sql_stok_rendah() . '
     ORDER BY stok_tersedia ASC
     LIMIT 5
-");
+');
 
 include 'includes/header.php';
 ?>
@@ -125,7 +126,7 @@ include 'includes/header.php';
                     <div style="font-size:.85rem;font-weight:500;line-height:1.3"><?= htmlspecialchars($bk['judul']) ?></div>
                     <div style="font-size:.72rem;color:var(--text-muted)"><?= htmlspecialchars($bk['pengarang']) ?></div>
                 </div>
-                <span class="badge <?= $bk['status_stok']==='Habis' ? 'badge-danger' : 'badge-warning' ?>">
+                <span class="badge <?= stok_badge_class((int) $bk['stok_tersedia']) ?>">
                     <?= $bk['stok_tersedia'] ?>/<?= $bk['stok_total'] ?>
                 </span>
             </div>
